@@ -28,6 +28,10 @@ OptionParser.new do |opts|
     options[:statement_type] = :credit
   end
   
+  opts.on("--privilege", "Process Privilege Premier account statements") do |statement_type|
+    options[:statement_type] = :privilege
+  end
+  
   opts.separator ""
   opts.separator "Common options:"
   
@@ -58,10 +62,15 @@ if options[:statement_type] == :credit
 elsif options[:statement_type] == :savings
   require 'coop_scraper/savings_account'
   scraper_class = CoopScraper::SavingsAccount
+elsif options[:statement_type] == :privilege
+  require 'coop_scraper/privilege_premier_account'
+  scraper_class = CoopScraper::PrivilegePremierAccount
 else
   require 'coop_scraper/current_account'
   scraper_class = CoopScraper::CurrentAccount
 end
 
-statement = scraper_class.generate_statement(File.open(input_path), create_time)
+account = scraper_class.new(File.open(input_path), create_time)
+statement = account.generate_statement
+
 File.open(output_file_path, 'w') { |f| f.write(statement.serialise(options[:format])) }

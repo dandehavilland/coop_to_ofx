@@ -5,8 +5,8 @@ module CoopScraper
   
   module Version
     MAJOR = 1
-    MINOR = 0
-    POINT = 1
+    MINOR = 2
+    POINT = 0
     FULL = [CoopScraper::Version::MAJOR, CoopScraper::Version::MINOR, CoopScraper::Version::POINT].join('.')
   end
 end
