@@ -70,7 +70,7 @@ XML / SGML validation of output against the specs}
     s.specification_version = 3
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<hpricot>, ["~> 0.6.0"])
+      s.add_runtime_dependency(%q<hpricot>, [">= 0.6.0"])
       s.add_runtime_dependency(%q<builder>, ["~> 2.1.0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
     else
