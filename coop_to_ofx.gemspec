@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{coop_to_ofx}
-  s.version = "1.2.0"
+  s.version = "1.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Patterson", "Dan de Havilland"]

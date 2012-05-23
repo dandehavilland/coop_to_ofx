@@ -5,7 +5,7 @@ module CoopScraper
     ID_STRING = "CURRENT ACCOUNT"
     STATEMENT_CLASS = OFX::Statement::CurrentAccount
     
-    def determine_trntype(details)
+    def determine_trntype details
       case details
       when /^DEBIT INTEREST$/
         :interest

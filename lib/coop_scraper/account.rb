@@ -12,13 +12,12 @@ module CoopScraper
     ACCT_LENGTH = 8
     STATEMENT_CLASS = OFX::Statement::CurrentAccount
     
-    def initialize(html_statement_io, server_response_time)
-      @html = prepare_data(html_statement_io)
+    def initialize data, server_response_time
+      @html = prepare_data(data)
       @time = server_response_time
     end
     
     def generate_statement
-      @doc = Hpricot(@html)
       statement = STATEMENT_CLASS.new
       
       statement.server_response_time = @time
@@ -36,26 +35,29 @@ module CoopScraper
     
     protected
     
-    def coop_date_to_time(coop_date)
-      day, month, year = coop_date.match(/([0-9]{2})\/([0-9]{2})\/([0-9]{4})/).captures
-      Time.utc(year, month, day)
+    def document
+      @doc ||= Hpricot(@html)
+    end
+    
+    def coop_date_to_time date_string
+      Time.utc *date_string.match(/([0-9]{2})\/([0-9]{2})\/([0-9]{4})/).captures.reverse
     end
     
     def account_number
-      @doc.at("h4[text()*='#{self.class::ID_STRING}']").inner_text.match(/([0-9]{#{ACCT_LENGTH}})/)[1]
+      document.at("h4[text()*='#{self.class::ID_STRING}']").inner_text.match(/([0-9]{#{ACCT_LENGTH}})/)[1]
     end
     
     def sort_code
-      @doc.at("h4[text()*='#{self.class::ID_STRING}']").inner_text.match(/([0-9]{2}-[0-9]{2}-[0-9]{2})/)[1].tr('-', '')
+      document.at("h4[text()*='#{self.class::ID_STRING}']").inner_text.match(/([0-9]{2}-[0-9]{2}-[0-9]{2})/)[1].tr('-', '')
     end
     
     def statement_date
-      coop_date_to_time(@doc.at("td[text()^='#{self.class::DATE_ID_STRING}']").inner_text)
+      coop_date_to_time(document.at("td[text()^='#{self.class::DATE_ID_STRING}']").inner_text)
     end
     
     def transaction_rows
       @transaction_rows ||= begin
-        table = @doc.at("th[text()='Transaction']").parent.parent.parent
+        table = document.at("th[text()='Transaction']").parent.parent.parent
         table.search('tbody tr')
       end
     end
@@ -63,12 +65,9 @@ module CoopScraper
     def transactions
       @transactions ||= begin
         output = []
-        a_td = @doc.at('td.transData')
+        a_td = document.at('td.transData')
         
-        rows = transaction_rows.clone
-        rows.shift
-        
-        transactions = rows.map do |row|
+        transactions = transaction_rows.map do |row|
           date    = row.at('td.dataRowL').inner_text
           details = row.at('td.transData').inner_text.strip
           credit  = row.at('td.moneyData:first').inner_text.match(/[0-9.]+/)
@@ -84,7 +83,6 @@ module CoopScraper
       end
     end
     
-    
     def closing_balance
       final_transaction = transaction_rows.last.at('td.moneyData:last').inner_text
       amount = final_transaction.match(/[0-9.]+/).to_s
@@ -93,14 +91,16 @@ module CoopScraper
     end
     
     def statement_start_date
-      coop_date_to_time(
-        transaction_rows.first.at('td.dataRowL').inner_text
-      )
+      coop_date_to_time(transaction_rows.first.at('td.dataRowL').inner_text)
+    end
+    
+    def determine_trntype(details)
+      nil
     end
     
     # ensure no invalid UTF-8 strings are going to fuck with hpricot
-    def prepare_data file
-      Iconv.new('UTF-8//IGNORE', 'UTF-8').iconv(file.read)
+    def prepare_data data
+      Iconv.new('UTF-8//IGNORE', 'UTF-8').iconv(data)
     end
   end
 end

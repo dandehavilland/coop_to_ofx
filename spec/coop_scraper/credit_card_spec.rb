@@ -5,7 +5,7 @@ describe CoopScraper::CreditCard do
     full_fixture_path('credit_card', fixture_file_name)
   end
   
-  describe "parsing the html components" do
+  pending "parsing the html components" do
     def fixture_doc(fixture_file_name = 'cc_statement_fixture.html')
       open(fixture_path(fixture_file_name)) { |f| Hpricot(f) }
     end
@@ -188,7 +188,7 @@ describe CoopScraper::CreditCard do
     end
   end
   
-  describe "creating the statement object" do
+  pending "creating the statement object" do
     before(:each) do
       fixture = open(fixture_path('cc_statement_fixture.html'))
       @statement = CoopScraper::CreditCard.generate_statement(fixture, Time.utc('2009', '3', '6'))

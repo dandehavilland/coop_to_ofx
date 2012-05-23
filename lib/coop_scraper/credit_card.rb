@@ -3,25 +3,25 @@ require 'coop_scraper/account'
 module CoopScraper
   class CreditCard < Account
     
-    ID_STRING = "TRAVEL CARD"
+    ID_STRING = "CLEARCARD"
     DATE_ID_STRING = "Statement Date"
     ACCT_LENGTH = 16
     
     
-    def extract_statement_balance(doc)
-      amount, sign = doc.at("td[text()='Statement Balance'] ~ td").inner_text.match(/([0-9.]+) *(DR)?/).captures
+    def extract_statement_balance
+      amount, sign = document.at("td[text()='Statement Balance'] ~ td").inner_text.match(/([0-9.]+) *(DR)?/).captures
       amount = "-#{amount}" if sign == "DR"
       amount
     end
     
-    def extract_available_credit(doc)
-      doc.at("td[text()='Available Credit'] ~ td").inner_text.match(/[0-9.]+/).to_s
+    def extract_available_credit
+      document.at("td[text()='Available Credit'] ~ td").inner_text.match(/[0-9.]+/).to_s
     end
     
-    def extract_transactions(doc, statement)
+    def extract_transactions statement
       transactions = []
       current_transaction = {}
-      doc.search('tbody.contents tr').each do |statement_row|
+      document.search('tbody.contents tr').each do |statement_row|
         date = statement_row.at('td.dataRowL').inner_text
         unless date == "?" || date[0] == 194
           current_transaction = extract_transaction(statement_row, coop_date_to_time(date))
@@ -54,16 +54,15 @@ module CoopScraper
     end
     
     def generate_statement(html_statement_io, server_response_time)
-      doc = Hpricot(html_statement_io)
       statement = OFX::Statement::CreditCard.new
       
       statement.server_response_time = server_response_time
-      statement.account_number = extract_account_number(doc)
-      statement.date = extract_statement_date(doc)
-      statement.ledger_balance = extract_statement_balance(doc)
-      statement.available_credit = extract_available_credit(doc)
+      statement.account_number = extract_account_number
+      statement.date = extract_statement_date
+      statement.ledger_balance = extract_statement_balance
+      statement.available_credit = extract_available_credit
 
-      extract_transactions(doc, statement).each { |transaction| statement << transaction }
+      extract_transactions(statement).each { |transaction| statement << transaction }
 
       statement.start_date = statement.transactions.first.date
       statement.end_date = statement.date

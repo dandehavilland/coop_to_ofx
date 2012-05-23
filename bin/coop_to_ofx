@@ -70,7 +70,7 @@ else
   scraper_class = CoopScraper::CurrentAccount
 end
 
-account = scraper_class.new(File.open(input_path), create_time)
+account = scraper_class.new(File.open(input_path).read, create_time)
 statement = account.generate_statement
 
 File.open(output_file_path, 'w') { |f| f.write(statement.serialise(options[:format])) }
