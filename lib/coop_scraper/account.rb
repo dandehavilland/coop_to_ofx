@@ -68,7 +68,10 @@ module CoopScraper
         a_td = document.at('td.transData')
         
         transactions = transaction_rows.map do |row|
-          date    = row.at('td.dataRowL').inner_text
+          date    = row.at('td.dataRowL').inner_text.gsub(/[^0-9\-\/]+/,'')
+          
+          next if date.empty?
+          
           details = row.at('td.transData').inner_text.strip
           credit  = row.at('td.moneyData:first').inner_text.match(/[0-9.]+/)
           debit   = row.search('td.moneyData')[1].inner_text.match(/[0-9.]+/)
@@ -80,6 +83,8 @@ module CoopScraper
           
           OFX::Statement::Transaction.new(amount, coop_date_to_time(date), details, options)
         end
+        
+        transactions.compact
       end
     end
     
